@@ -1,0 +1,26 @@
+Step 1
+$ wget -O crime.csv https://data.cityofchicago.org/api/views/ijzp-q8t2/rows.csv?accessType=DOWNLOAD
+$ wget -O social-econ.csv https://data.cityofchicago.org/api/views/kn9c-c2s2/rows.csv?accessType=DOWNLOAD
+
+Step 2
+$ Hdfs dfs -put crime.csv .
+$ hdfs dfs -put social-econ.csv .
+$ hdfs dfs -ls .
+
+Step 3
+$ pig
+socialecon  =  LOAD 'social-econ.csv' USING PigStorage(',') 
+AS (Community_Number,COMMUNITY_NAME,HOUSING_CROWDED, HOUSEHOLDS_BELOW_POVERTY, 
+AGE16_UNEMPLOYED, AGE25_WITHOUT_HSDIPLOMA, AGE18OR64, CAPITA_INCOME , HARDSHIP_INDEX);
+
+social_data = Filter socialecon by Community_Number != 'Community Area Number';
+DESCRIBE socialecon;
+DUMP social_data;
+
+crime = LOAD 'crime.csv' USING PigStorage(',') 
+AS (ID,Case_Number,Date,Block,IUCR,Primary_Type,Description,Location_Description, Arrest,Domestic,
+Beat,District,Ward,Community_ID,FBI_Code,X_Coordinate,Y_Coordinate,Year,Updated_On,Latitude,Longitude,Location);
+
+crime_raw_data = FOREACH crime GENERATE Community_ID, Year ;
+
+crime_data_08_12 = FILTER crime_raw_data BY (Year >= 2008) AND (Year <= 2012);
